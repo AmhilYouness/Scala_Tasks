@@ -49,17 +49,39 @@ def get_first_price(symbol: String, year: Int) : Option[Double] = {
 
 
 // (3) 
-def get_prices(portfolio: List[String], years: Range) : List[List[Option[Double]]] = ???
+def get_prices(portfolio: List[String], years: Range) : List[List[Option[Double]]] = {
+    years.map { year =>
+        portfolio.map { symbol =>
+            get_first_price(symbol, year)
+        }
+    }.toList
+}
 
 
 
 // (4) 
-def get_delta(price_old: Option[Double], price_new: Option[Double]) : Option[Double] = ???
+def get_delta(price_old: Option[Double], price_new: Option[Double]) : Option[Double] = {
+    (price_old, price_new) match {
+        case (Some(p_old), Some(p_new)) => Some((p_new - p_old) / p_old)
+        case _ => None
+    }
+}
 
 
 
 // (5) 
-def get_deltas(data: List[List[Option[Double]]]) :  List[List[Option[Double]]] = ???
+def get_deltas(data: List[List[Option[Double]]]) :  List[List[Option[Double]]] = {
+    val num_years = data.size
+    data.zipWithIndex.map { case (prices, i) =>
+        prices.map { price_old =>
+            if (i + 1 < num_years) {
+                get_delta(price_old, data(i + 1)(prices.indexOf(price_old)))
+            } else {
+                None
+            }
+        }
+    }
+}
 
 // (6) 
 def yearly_yield(data: List[List[Option[Double]]], balance: Long, index: Int) : Long = ???
