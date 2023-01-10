@@ -84,13 +84,33 @@ def get_deltas(data: List[List[Option[Double]]]) :  List[List[Option[Double]]] =
 }
 
 // (6) 
-def yearly_yield(data: List[List[Option[Double]]], balance: Long, index: Int) : Long = ???
+def yearly_yield(data: List[List[Option[Double]]], balance: Long, index: Int) : Long = {
+    if (index >= data.size) {
+        balance
+    } else {
+        val changes = data(index)
+        val num_companies = changes.size
+        val invested = balance / num_companies
+        val profit = changes.filter(_.isDefined).map(_.get).map(x => (x * invested).toLong).sum
+        balance + profit
+    }
+}
 
 
 // (7) 
-def compound_yield(data: List[List[Option[Double]]], balance: Long, index: Int) : Long = ???
+def compound_yield(data: List[List[Option[Double]]], balance: Long, index: Int) : Long = {
+    if (index >= data.size) {
+        balance
+    } else {
+        val new_balance = yearly_yield(data, balance, index)
+        compound_yield(data, new_balance, index + 1)
+    }
+}
 
-def investment(portfolio: List[String], years: Range, start_balance: Long) : Long = ???
+def investment(portfolio: List[String], years: Range, start_balance: Long) : Long =  {
+    val data = get_deltas(get_prices(portfolio, years.start to years.end))
+    compound_yield(data, start_balance, 0)
+}
 
 
 
