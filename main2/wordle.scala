@@ -49,18 +49,24 @@ case object Absent extends Tip
 case object Present extends Tip
 case object Correct extends Tip
 
-def pool(secret: String, word: String) : List[Char] = {
-    secret.filter(c => !word.contains(c)).toList
+
+
+
+def pool(secret: String, word: String): List[Char] = {
+    val minLength = math.min(secret.length, word.length)
+    (0 until minLength).filter(i => secret(i) != word(i)).map(i => secret(i)).toList
 }
+
+
+
+
 
 def aux(secret: List[Char], word: List[Char], pool: List[Char]) : List[Tip] = (secret, word) match {
     case (Nil, Nil) => Nil
     case (Nil, _) => word.map(_ => Absent)
     case (_, Nil) => secret.map(_ => Absent)
     case (s :: secretTail, w :: wordTail) =>
-        if (s == w && pool.contains(w)) {
-            Present :: aux(secretTail, wordTail, pool.filterNot(_ == w))
-        } else if (s == w) {
+        if (s == w) {
             Correct :: aux(secretTail, wordTail, pool.filterNot(_ == w))
         } else if (pool.contains(w)) {
             Present :: aux(secretTail, wordTail, pool.filterNot(_ == w))
@@ -72,7 +78,7 @@ def aux(secret: List[Char], word: List[Char], pool: List[Char]) : List[Tip] = (s
 def score(secret: String, word: String) : List[Tip] = {
     aux(secret.toList, word.toList, pool(secret, word))
 }
-:
+
 
 
 // score("chess", "caves") // => List(Correct, Absent, Absent, Present, Correct)
@@ -81,17 +87,24 @@ def score(secret: String, word: String) : List[Tip] = {
 // score("chess", "eexss") // => List(Present, Absent, Absent, Correct, Correct)
 
 // (4)
-def eval(t: Tip) : Int = ???
+def eval(t: Tip) : Int ={
+    t match {
+        case Absent => 0
+        case Present => 1
+        case Correct => 10
+    }
+}
 
-def iscore(secret: String, word: String) : Int = ???
-
+def iscore(secret: String, word: String) : Int = {
+    score(secret,word).map(eval).sum
+}
 //iscore("chess", "caves") // => 21
 //iscore("chess", "swiss") // => 20
 
 // (5)
-def lowest(secrets: List[String], word: String, current: Int, acc: List[String]) : List[String] = ???
+// def lowest(secrets: List[String], word: String, current: Int, acc: List[String]) : List[String] = ???
 
-def evil(secrets: List[String], word: String) = ???
+// def evil(secrets: List[String], word: String) = ???
 
 
 //evil(secrets, "stent").length
@@ -101,12 +114,12 @@ def evil(secrets: List[String], word: String) = ???
 //evil(secrets, "house").length
 
 // (6)
-def frequencies(secrets: List[String]) : Map[Char, Double] = ???
+// def frequencies(secrets: List[String]) : Map[Char, Double] = ???
 
 // (7)
-def rank(frqs: Map[Char, Double], s: String) = ???
+// def rank(frqs: Map[Char, Double], s: String) = ???
 
-def ranked_evil(secrets: List[String], word: String) = ???
+// def ranked_evil(secrets: List[String], word: String) = ???
 
 
 }
