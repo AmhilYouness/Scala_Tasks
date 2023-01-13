@@ -102,9 +102,25 @@ def iscore(secret: String, word: String) : Int = {
 //iscore("chess", "swiss") // => 20
 
 // (5)
-// def lowest(secrets: List[String], word: String, current: Int, acc: List[String]) : List[String] = ???
+def lowest(secrets: List[String], word: String, current: Int, acc: List[String]) : List[String] =  {
+    if (secrets.isEmpty) {
+        acc
+    } else {
+        val secret = secrets.head
+        val score = iscore(secret, word)
+        if (score < current) {
+            lowest(secrets.tail, word, score, List(secret))
+        } else if (score == current) {
+            lowest(secrets.tail, word, score, secret :: acc)
+        } else {
+            lowest(secrets.tail, word, current, acc)
+        }
+    }
+}
 
-// def evil(secrets: List[String], word: String) = ???
+def evil(secrets: List[String], word: String) = {
+    lowest(secrets, word, Int.MaxValue, List())
+}
 
 
 //evil(secrets, "stent").length
@@ -114,12 +130,22 @@ def iscore(secret: String, word: String) : Int = {
 //evil(secrets, "house").length
 
 // (6)
-// def frequencies(secrets: List[String]) : Map[Char, Double] = ???
+def frequencies(secrets: List[String]) : Map[Char, Double] = {
+    val allLetters = secrets.mkString.toLowerCase.toList
+    val numLetters = allLetters.length
+    val letterCount = allLetters.groupBy(identity).mapValues(_.size.toDouble)
+    letterCount.mapValues(count =>1 -  count / numLetters).toMap
+}
 
 // (7)
-// def rank(frqs: Map[Char, Double], s: String) = ???
+def rank(frqs: Map[Char, Double], s: String) = {
+    s.toLowerCase.map(frqs.getOrElse(_, 0.0)).sum
+}
 
-// def ranked_evil(secrets: List[String], word: String) = ???
+def ranked_evil(secrets: List[String], word: String) =  {
+    val frqs = frequencies(secrets)
+    evil(secrets,word).sortBy(s => rank(frqs, s)).reverse.take(1)
+}
 
 
 }
