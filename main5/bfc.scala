@@ -37,7 +37,24 @@ import scala.util._
 //======================
 
 // (6) 
-def jtable(pg: String) : Map[Int, Int] = ???
+// def jtable(pg: String) : Map[Int, Int] = ???
+
+
+def jtable(pg: String): Map[Int, Int] = {
+    var table = Map[Int, Int]()
+    var stack = List[Int]()
+    for (i <- 0 until pg.length) {
+        if (pg(i) == '[') stack = i :: stack
+        else if (pg(i) == ']') {
+            val start = stack.head
+            stack = stack.tail
+            table += (i -> (start + 1))
+            table += (start -> (i + 1))
+        }
+    }
+    table
+}
+
 
 // testcase
 //
@@ -45,8 +62,26 @@ def jtable(pg: String) : Map[Int, Int] = ???
 // =>  Map(69 -> 61, 5 -> 20, 60 -> 70, 27 -> 44, 43 -> 28, 19 -> 6)
 
 
-def compute2(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Mem) : Mem = ???
-def run2(pg: String, m: Mem = Map()) = ???
+def compute2(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Map[Int, Int]): Map[Int, Int] = {
+    if (pc < 0 || pc >= pg.length) return mem
+    val (newPc, newMp, newMem) = pg(pc) match {
+        case '>' => (pc + 1, mp + 1, mem)
+        case '<' => (pc + 1, mp - 1, mem)
+        case '+' => (pc + 1, mp, mem + (mp -> (mem.getOrElse(mp, 0) + 1)))
+        case '-' => (pc + 1, mp, mem + (mp -> (mem.getOrElse(mp, 0) - 1)))
+        case '.' => (pc + 1, mp, mem)
+        case ',' => (pc + 1, mp, mem)
+        case '[' => if (mem.getOrElse(mp, 0) == 0) (tb(pc), mp, mem) else (pc + 1, mp, mem)
+        case ']' => if (mem.getOrElse(mp, 0) != 0) (tb(pc), mp, mem) else (pc + 1, mp, mem)
+    }
+    compute2(pg, tb, newPc, newMp, newMem)
+}
+
+def run2(pg: String, m: Map[Int, Int] = Map()): Map[Int, Int] = {
+    val jumpTable = jtable(pg)
+    compute2(pg, jumpTable, 0, 0, m)
+}
+
 
 // testcases
 // time_needed(1, run2(load_bff("benchmark.bf")))
@@ -56,7 +91,14 @@ def run2(pg: String, m: Mem = Map()) = ???
 
 // (7) 
 
-def optimise(s: String) : String = ???
+import scala.util.matching.Regex
+
+def optimise(s: String): String = {
+    val deadCode = "[^<>+-.,\\[\\]]".r
+    val loop = "\\[\\s*-\\s*\\]".r
+    deadCode.replaceAllIn(s, "") // remove dead code
+        .replaceAll(loop.toString, "0") // replace [ - ] with 0
+}
 
 def compute3(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Mem) : Mem = ???
 
