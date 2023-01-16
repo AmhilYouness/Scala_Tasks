@@ -10,14 +10,14 @@ object C2 {
 
 //(1)
 def clean(s: String) : List[String] =  {
-  val pattern = new Regex("\\w+")
-  (pattern.findAllIn(s).toList).map(_.toLowerCase)
+  val _pattern = new Regex("\\w+")
+  (_pattern.findAllIn(s).toList).map(_.toLowerCase)
 }
 
 
 //(2)
 def occurrences(xs: List[String]): Map[String, Int] = {
-  xs.distinct.map(s => s -> xs.count(_ == s)).toMap
+  xs.distinct.map(ss => ss -> xs.count(_ == ss)).toMap
 }
 
 
@@ -25,8 +25,8 @@ def occurrences(xs: List[String]): Map[String, Int] = {
 def prod(lst1: List[String], lst2: List[String]) : Int = {
   val occ1 = occurrences(lst1)
   val occ2 = occurrences(lst2)
-  val strs = (occ1.keySet ++ occ2.keySet).toList
-  strs.map { s =>
+  val res = (occ1.keySet ++ occ2.keySet).toList
+  res.map { s =>
     occ1.getOrElse(s, 0) * occ2.getOrElse(s, 0)
   }.sum
 }
