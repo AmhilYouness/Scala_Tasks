@@ -36,8 +36,21 @@ import scala.util._
 // ADD YOUR CODE BELOW
 //======================
 
+def write(mem: Mem, mp: Int, v: Int) : Mem = mem + (mp -> v)
+
+def load_bff(name: String) : String = {
+    try {
+        val file = Source.fromFile(name)
+        val content = file.mkString
+        file.close()
+        content
+    } catch {
+        case _: Exception => ""
+    }
+}
+
+
 // (6) 
-// def jtable(pg: String) : Map[Int, Int] = ???
 
 
 def jtable(pg: String): Map[Int, Int] = {
@@ -100,9 +113,28 @@ def optimise(s: String): String = {
         .replaceAll(loop.toString, "0") // replace [ - ] with 0
 }
 
-def compute3(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Mem) : Mem = ???
+def compute3(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Map[Int, Int]): Map[Int, Int] = {
+    if (pc < 0 || pc >= pg.length) return mem
+    val (newPc, newMp, newMem) = pg(pc) match {
+        case '>' => (pc + 1, mp + 1, mem)
+        case '<' => (pc + 1, mp - 1, mem)
+        case '+' => (pc + 1, mp, mem + (mp -> (mem.getOrElse(mp, 0) + 1)))
+        case '-' => (pc + 1, mp, mem + (mp -> (mem.getOrElse(mp, 0) - 1)))
+        case '.' => (pc + 1, mp, mem)
+        case ',' => (pc + 1, mp, mem)
+        case '0' => (pc + 1, mp, write(mem, mp, 0)) // new command
+        case '[' => if (mem.getOrElse(mp, 0) == 0) (tb(pc), mp, mem) else (pc + 1, mp, mem)
+        case ']' => if (mem.getOrElse(mp, 0) != 0) (tb(pc), mp, mem) else (pc + 1, mp, mem)
+    }
+    compute3(pg, tb, newPc, newMp, newMem)
+}
 
-def run3(pg: String, m: Mem = Map()) = ???
+
+def run3(pg: String, m: Map[Int, Int] = Map()): Map[Int, Int] = {
+    val jumpTable = jtable(pg)
+    val optimisedProgram = optimise(pg)
+    compute3(optimisedProgram, jumpTable, 0, 0, m)
+}
 
 
 // testcases
