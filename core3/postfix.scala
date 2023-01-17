@@ -25,23 +25,53 @@ def split(s: String) : Toks = s.split(" ").toList
 
 // (1) 
 def is_op(op: String) : Boolean = ops.contains(op)
+def prec(op1: String, op2: String) : Boolean = precs(op1) <= precs(op2)
 
-def prec(op1: String, op2: String) : Boolean = precs(op1) >= precs(op2)
+
+
+
+
 
 def syard(toks: Toks, st: Toks = Nil, out: Toks = Nil) : Toks = toks match {
-  case Nil => st.reverse ++ out
-  case h :: t => h match {
-    case "+" | "-" | "*" | "/" =>
-      val popped = st.takeWhile(is_op)
-      syard(t, st.drop(popped.length), popped ++ out)
-    case "(" =>
-      syard(t, h :: st, out)
-    case ")" =>
-      val popped = st.takeWhile(_ != "(")
-      syard(t, st.drop(popped.length + 1), popped ++ out)
-    case _ =>
-      syard(t, st, out :+ h)
-  }
+    case x :: xs => {
+        if (is_op(x)) {
+            st match {
+                case s :: ss if s == "(" => {
+                    syard(xs, x :: st, out)
+                    }
+                case s :: ss if s == ")" => {
+                    val index = st.indexOf("(")
+                    syard(xs, st.drop(index + 1), out:::st.take(index))
+                    }
+                case s :: ss if (prec(s, x)) =>{
+                    syard(toks, ss, out ::: s :: Nil)
+                    }
+                case s :: ss if (prec(s, x) == false) =>{
+                    syard(xs,x::st,out)
+                    }
+                case _ => {
+                    syard(xs, x :: Nil, out)
+                    }
+            }
+        }
+        else if(x.forall(_.isDigit)){
+            syard(xs,st, out ::: x :: Nil)
+            }
+        else if(x == "("){
+            syard(xs, x :: st, out)
+            }
+        else if(x == ")"){
+            val index = st.indexOf("(")
+            syard(xs, st.drop(index + 1), out:::st.take(index))
+            }
+        else{
+            println(x)
+            out ::: x :: Nil
+            }
+    }
+    case _ => {
+        out ::: st
+        }
 }
 
 
@@ -61,31 +91,26 @@ def syard(toks: Toks, st: Toks = Nil, out: Toks = Nil) : Toks = toks match {
 
  
 // (2) 
-def compute(toks: Toks, st: List[Int] = Nil) : Int ={
-  if (toks.isEmpty) return st.head
-  
-  val h = toks.head
-  
-  if (!is_op(h)) {
-    compute(toks.tail, h.toInt::st)
-  } else {
-    val b = st.head
-    val a = st.tail.head
-    
-    val res = h match {
-      case "+" => a + b
-      case "-" => a - b
-      case "*" => a * b
-      case "/" => a / b
+def compute(toks: Toks) : Int = {
+  var st = List[Int]()
+  for (tok <- toks) {
+    if (is_op(tok)) {
+      var op2 = st.head
+      st = st.tail
+      var op1 = st.head
+      st = st.tail
+      tok match {
+        case "+" => st = (op1 + op2) :: st
+        case "-" => st = (op1 - op2) :: st
+        case "*" => st = (op1 * op2) :: st
+        case "/" => st = (op1 / op2) :: st
+      }
+    } else {
+      st = tok.toInt :: st
     }
-    
-    compute(toks.tail, res::st.tail.tail)
   }
+  st.head
 }
-
-
-
-
 
 // test cases
 // compute(syard(split("3 + 4 * ( 2 - 1 )")))  // 7
