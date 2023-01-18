@@ -86,7 +86,14 @@ case r :: rest => r :: denest(rest)
 
 
 // (4)
-def flts(rs: List[Rexp], acc: List[Rexp] = Nil) : List[Rexp] = ???
+def flts(rs: List[Rexp], acc: List[Rexp] = Nil) : List[Rexp] =  rs match {
+     case List() => acc
+     case ZERO :: s => List(ZERO)
+     case ONE :: s => flts(s,acc)
+     case ALTs(x) :: s => x ::: flts(s,acc)
+     case x :: s => x :: flts(s,acc)
+}
+
 
 // (5)
 def ALTs_smart(rs: List[Rexp]) : Rexp = ???
