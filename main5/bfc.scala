@@ -36,21 +36,8 @@ import scala.util._
 // ADD YOUR CODE BELOW
 //======================
 
-def write(mem: Mem, mp: Int, v: Int) : Mem = mem + (mp -> v)
-
-def load_bff(name: String) : String = {
-    try {
-        val file = Source.fromFile(name)
-        val content = file.mkString
-        file.close()
-        content
-    } catch {
-        case _: Exception => ""
-    }
-}
-
-
 // (6) 
+// def jtable(pg: String) : Map[Int, Int] = ???
 
 
 def jtable(pg: String): Map[Int, Int] = {
@@ -113,28 +100,9 @@ def optimise(s: String): String = {
         .replaceAll(loop.toString, "0") // replace [ - ] with 0
 }
 
-def compute3(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Map[Int, Int]): Map[Int, Int] = {
-    if (pc < 0 || pc >= pg.length) return mem
-    val (newPc, newMp, newMem) = pg(pc) match {
-        case '>' => (pc + 1, mp + 1, mem)
-        case '<' => (pc + 1, mp - 1, mem)
-        case '+' => (pc + 1, mp, mem + (mp -> (mem.getOrElse(mp, 0) + 1)))
-        case '-' => (pc + 1, mp, mem + (mp -> (mem.getOrElse(mp, 0) - 1)))
-        case '.' => (pc + 1, mp, mem)
-        case ',' => (pc + 1, mp, mem)
-        case '0' => (pc + 1, mp, write(mem, mp, 0)) // new command
-        case '[' => if (mem.getOrElse(mp, 0) == 0) (tb(pc), mp, mem) else (pc + 1, mp, mem)
-        case ']' => if (mem.getOrElse(mp, 0) != 0) (tb(pc), mp, mem) else (pc + 1, mp, mem)
-    }
-    compute3(pg, tb, newPc, newMp, newMem)
-}
+def compute3(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Mem) : Mem = ???
 
-
-def run3(pg: String, m: Map[Int, Int] = Map()): Map[Int, Int] = {
-    val jumpTable = jtable(pg)
-    val optimisedProgram = optimise(pg)
-    compute3(optimisedProgram, jumpTable, 0, 0, m)
-}
+def run3(pg: String, m: Mem = Map()) = ???
 
 
 // testcases
@@ -147,16 +115,81 @@ def run3(pg: String, m: Map[Int, Int] = Map()): Map[Int, Int] = {
 
 
 // (8)  
-def combine(s: String) : String = ???
+def combine(s: String): String = {
+    var result = ""
+    var count = 0
+    var currentChar = ' '
+    for (c <- s) {
+        if (c == currentChar) {
+            count += 1
+        } else {
+            if (count > 0) {
+                result += (currentChar.toString + (count % 26 + 'A'.toInt).toChar)
+            }
+            currentChar = c
+            count = 1
+        }
+    }
+    if (count > 0) {
+        result += (currentChar.toString + (count % 26 + 'A'.toInt).toChar)
+    }
+    result
+}
 
 // testcase
 // combine(load_bff("benchmark.bf"))
 
-def compute4(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Mem) : Mem = ???
+def compute4(pg: String, tb: Map[Int, Int], pc: Int, mp: Int, mem: Mem): Mem = {
+    if (pc >= pg.length) {
+        return mem
+    }
+    val c = pg(pc)
+    val (newPc, newMp, newMem) = c match {
+        case '+' => if (pg(pc + 1) >= 'A' && pg(pc + 1) <= 'Z') {
+            (pc + 2, mp, write(mem, mp, mem.getOrElse(mp, 0) + (pg(pc + 1) - 'A' + 1)))
+        } else {
+            (pc + 1, mp, write(mem, mp, mem.getOrElse(mp, 0) + 1))
+        }
+        case '-' => if (pg(pc + 1) >= 'A' && pg(pc + 1) <= 'Z') {
+            (pc + 2, mp, write(mem, mp, mem.getOrElse(mp, 0) - (pg(pc + 1) - 'A' + 1)))
+        } else {
+            (pc + 1, mp, write(mem, mp, mem.getOrElse(mp, 0) - 1))
+        }
+        case '>' => if (pg(pc + 1) >= 'A' && pg(pc + 1) <= 'Z') {
+            (pc + 2, mp + (pg(pc + 1) - 'A' + 1), mem)
+            } else {
+        (pc + 1, mp + 1, mem)
+        }
+        case '<' => if (pg(pc + 1) >= 'A' && pg(pc + 1) <= 'Z') {
+        (pc + 2, mp - (pg(pc + 1) - 'A' + 1), mem)
+        } else {
+        (pc + 1, mp - 1, mem)
+        }
+        case '.' => (pc + 1, mp, mem)
+        case ',' => (pc + 1, mp, write(mem, mp, read()))
+        case '[' => if (sread(mem, mp) == 0) {
+        (tb(pc), mp, mem)
+        } else {
+        (pc + 1, mp, mem)
+        }
+        case ']' => if (sread(mem, mp) != 0) {
+        (tb(pc), mp, mem)
+        } else {
+        (pc + 1, mp, mem)
+        }
+        case '0' => (pc + 1, mp, write(mem, mp, 0))
+        }
+        compute4(pg, tb, newPc, newMp, newMem)
+        }
 
 // should call first optimise and then combine on the input string
 //
-def run4(pg: String, m: Mem = Map()) = ???
+def run4(pg: String, m: Mem = Map()): Mem = {
+val opt = optimise(pg)
+val jt = jtable(opt)
+val comb = combine(opt)
+compute4(comb, jt, 0, 0, m)
+}
 
 
 // testcases
